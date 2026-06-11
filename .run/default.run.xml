@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="default" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UnknownPolicyInFreeMode" />
+    <module name="fincorehub" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.resustainability.fincorehub.FinCoreHubApplication" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="com.resustainability.fincorehub.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

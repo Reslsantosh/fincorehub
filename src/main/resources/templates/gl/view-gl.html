@@ -1,0 +1,512 @@
+ 
+ <!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}">
+<head>
+    <title>GL Records</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="top-nav"><span class="text-muted fw-medium">GL Master / Records</span></div>
+        <div class="container-fluid px-2 mt-4">
+            <div class="card shadow-sm border-0 table-card w-100">
+                <div class="card-header bg-white py-3 px-3">
+
+                    <div class="row align-items-center g-3 mb-3">
+
+                        <div class="col-xl-4 col-lg-3 col-md-12 d-flex align-items-center gap-2">
+                            <a th:href="@{/}" class="btn btn-outline-secondary btn-sm text-nowrap">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </a>
+                            <h5 class="mb-0 text-primary fw-bold text-nowrap">
+                                GL Records
+                            </h5>
+                        </div>
+
+                        <div class="col-xl-8 col-lg-9 col-md-12 d-flex flex-wrap justify-content-start justify-content-md-end align-items-center gap-2">
+
+                            <input type="text"
+                                   id="accountNumberFilter"
+                                   class="form-control form-control-sm flex-grow-1 flex-sm-grow-0"
+                                   placeholder="Search Account Number"
+                                   style="width: 160px; min-width: 140px;">
+
+                            <input type="text"
+                                   id="buFilter"
+                                   class="form-control form-control-sm flex-grow-1 flex-sm-grow-0"
+                                   placeholder="Search BU"
+                                   style="width: 140px; min-width: 120px;">
+
+                            <div class="d-flex align-items-center gap-1 ms-auto ms-md-0">
+                                <span class="small text-muted text-nowrap">Show</span>
+                                <select id="rowLimit" class="form-select form-select-sm" style="width: 65px;">
+                                    <option value="10" selected>10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-start justify-content-sm-end align-items-center gap-2 flex-wrap">
+                        <button class="btn btn-danger btn-sm flex-grow-1 flex-sm-grow-0" onclick="deleteSelectedRecords()">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+
+                        <button id="exportBtn" class="btn btn-success btn-sm flex-grow-1 flex-sm-grow-0">
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                    </div>
+
+                </div>
+                
+                <div class="card-body p-0">
+                    <div class="table-responsive gl-table-wrapper">
+                        <table class="table table-hover align-middle mb-0 gl-table">
+                            <thead class="table-light">
+                                <tr>
+                                     <th class="sticky-checkbox">
+                                       <input type="checkbox" id="selectAll">
+                                    </th>
+                                    <th class="sticky-sno">S.No</th>
+                                    <th class="sticky-account">Account</th>
+                                    <th>Description</th>
+                                    <th>Type</th>
+                                    <th>BU</th>
+                                    <th>Console Group</th>
+                                    <th>Category Group</th>
+                                    <th>P&L Headers</th>
+                                    <th class="sticky-action">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="glTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="pagination-footer flex-column flex-sm-row gap-3 text-center text-sm-start">
+                    <div class="text-muted small" id="recordCountInfo">Showing 0 to 0 of 0 entries</div>
+                    <nav><ul class="pagination pagination-sm mb-0 flex-wrap justify-content-center" id="paginationNav"></ul></nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block layout:fragment="modal">
+        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-white border-bottom">
+                        <h5 class="modal-title fw-bold text-primary" id="editModalLabel"><i class="bi bi-pencil-square me-2"></i>Edit GL Record</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="editGlForm">
+                        <div class="modal-body p-3 p-md-4">
+                            <input type="hidden" id="editGlId">
+                            <div class="row g-2 g-md-3">
+                                <div class="col-6 col-md-3">
+                                    <label class="form-label fw-bold small">Account Number</label>
+                                    <input type="text" id="editAccountNumber" class="form-control form-control-sm bg-light" readonly required>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label class="form-label fw-bold small">Type</label>
+                                    <input type="text" id="editType" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label fw-bold small">Description</label>
+                                    <textarea id="editDescription" class="form-control form-control-sm" rows="1" required></textarea>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label class="form-label fw-bold small">BU</label>
+                                    <input type="text" id="editBu" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label class="form-label fw-bold small">Console Group</label>
+                                    <input type="text" id="editConsoleGroup" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label class="form-label fw-bold small">Category Group</label>
+                                    <input type="text" id="editCategoryGroup" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                     <label class="form-label fw-bold small">P&amp;L Headers</label>
+                                     <input type="text" id="editPlHeaders" class="form-control form-control-sm" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light">
+                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary btn-sm">Update Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </th:block>
+    
+    <th:block layout:fragment="scripts">
+        
+<style>
+.pagination-footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 15px;
+    background:#fff;
+    border-top:1px solid #dee2e6;
+}
+
+.table-card{
+    border-radius:10px;
+    overflow:hidden;
+}
+
+.pagination .page-link{
+    min-width:34px;
+    text-align:center;
+    padding:4px 10px;
+}
+
+.gl-table-wrapper{
+    overflow:auto;
+    max-height:70vh;
+    scrollbar-width:none;          
+    -ms-overflow-style:none;       
+}
+
+.gl-table-wrapper::-webkit-scrollbar{
+    display:none;                  
+}
+
+.gl-table{
+    min-width:1300px;
+}
+
+.gl-table th,
+.gl-table td{
+    white-space:nowrap;
+    vertical-align:middle;
+    padding:8px 8px;
+    font-size:13px;
+}
+
+/* Header pinned vertically across ALL devices */
+.gl-table thead th{
+    position:sticky;
+    top:0;
+    z-index:25 !important;
+    background:#f8f9fa !important;
+    border-bottom:1px solid #dee2e6;
+    font-weight:600;
+}
+
+/* ========================================================================= */
+/* MULTI-DEVICE STICKY MANAGEMENT                                            */
+/* ========================================================================= */
+
+/* Base settings for all sizes (Ensures columns pin vertically at all times) */
+.sticky-checkbox,
+.sticky-sno,
+.sticky-account {
+    position: sticky;
+    background: #fff !important;
+}
+
+/* Desktop layout horizontal freezing (1200px and up) */
+@media (min-width: 1200px) {
+    .sticky-checkbox {
+        left: 0;
+        z-index: 10 !important;
+        width: 38px;
+        min-width: 38px;
+        max-width: 38px;
+        text-align: center;
+    }
+
+    .sticky-sno {
+        left: 38px;
+        z-index: 10 !important;
+        width: 55px;
+        min-width: 55px;
+        max-width: 55px;
+    }
+
+    .sticky-account {
+        left: 93px;
+        z-index: 10 !important;
+        width: 110px;
+        min-width: 110px;
+        max-width: 110px;
+    }
+
+    .gl-table thead .sticky-checkbox,
+    .gl-table thead .sticky-sno,
+    .gl-table thead .sticky-account {
+        z-index: 30 !important;
+    }
+}
+
+/* Mobile/Tablet layout adjustment (Clears horizontal lock for sliding, holds vertical lock) */
+@media (max-width: 1199.98px) {
+    .sticky-checkbox, .sticky-sno, .sticky-account {
+        left: auto !important;
+    }
+}
+
+/* Always Sticky Action Column across devices */
+.sticky-action {
+    position: sticky;
+    right: 0;
+    z-index: 12 !important;
+    background: #fff !important;
+    width: 85px;
+    min-width: 85px;
+    max-width: 85px;
+    text-align: center;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+    box-shadow: -3px 0 6px -2px rgba(0,0,0,0.12);
+}
+
+.gl-table thead .sticky-action {
+    z-index: 30 !important;
+}
+
+.gl-table tbody tr:hover td{
+    background:#fafcff;
+}
+
+#glTableBody{
+    transition:opacity 0.2s ease;
+}
+
+@media (max-width: 576px) {
+    .pagination .page-link {
+        min-width: 28px;
+        padding: 4px 6px;
+        font-size: 11px;
+    }
+}
+</style>
+
+        <script>
+            (function() {
+                const API_URL = window.APP_CONFIG.apiUrl('gl/');
+                let currentPage = 0;
+                
+                function loadRecords(pageNumber) {
+                	currentPage = pageNumber;
+                    const pageSize = parseInt(document.getElementById('rowLimit').value); 
+                    const tableBody = document.getElementById('glTableBody');
+                    tableBody.style.opacity = '0.6';
+
+                	const accountNumber = document.getElementById('accountNumberFilter').value.trim();
+                    const bu = document.getElementById('buFilter').value.trim();
+
+                    fetch(
+                        API_URL +
+                        'list?page=' + pageNumber +
+                        '&size=' + pageSize +
+                        '&accountNumber=' + encodeURIComponent(accountNumber) +
+                        '&bu=' + encodeURIComponent(bu),
+                    {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' }
+                    })
+                    .then(response => response.json())
+                    .then(res => {
+                        let displayData = (res.data && res.data.content) ? res.data.content : []; 
+                        const totalElements = res.data ? res.data.totalElements : 0; 
+                        const totalPages = res.data ? res.data.totalPages : 0;
+
+                        if (!displayData || displayData.length === 0) {
+                            tableBody.innerHTML = '<tr><td colspan="10" class="text-center py-5 text-muted">No data available</td></tr>';
+                            document.getElementById('recordCountInfo').textContent = 'Showing 0 to 0 of 0 entries';
+                            document.getElementById('paginationNav').innerHTML = '';
+                            return; 
+                        }
+
+                        const startLabel = (pageNumber * pageSize) + 1;
+                        const endLabel = (pageNumber * pageSize) + displayData.length;
+                        document.getElementById('recordCountInfo').textContent = 'Showing ' + startLabel + ' to ' + endLabel + ' of ' + totalElements + ' entries';
+
+                        let html = '';
+                        displayData.forEach((item, index) => {
+                            const itemJson = JSON.stringify(item).replace(/"/g, '&quot;');
+                            
+                            html += `<tr>
+                                <td class="sticky-checkbox">
+                                    <input type="checkbox" class="rowCheckbox" value="${item.id}">
+                                </td>
+                                <td class="sticky-sno">${(pageNumber * pageSize) + index + 1}</td>
+                                <td class="sticky-account">${item.accountNumber || '-'}</td>
+                                <td>${item.description || '-'}</td>
+                                <td>${item.type || '-'}</td>
+                                <td>${item.bu || '-'}</td>
+                                <td>${item.consoleGroup || '-'}</td>
+                                <td>${item.categoryGroup || '-'}</td>
+                                <td>${item.plHeaders || '-'}</td>
+                                <td class="sticky-action">
+                                    <button class="btn btn-sm btn-outline-primary px-2 py-0 small" onclick='openEditModal(${itemJson})'>
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </button>
+                                </td>
+                            </tr>`;
+                        });
+                        
+                        tableBody.innerHTML = html;
+                        tableBody.style.opacity = '1';
+                        renderPagination(totalPages, pageNumber);
+                    })
+                    .catch(() => {
+                        tableBody.style.opacity = '1';
+                        tableBody.innerHTML = '<tr><td colspan="10" class="text-center py-5 text-muted">No data available</td></tr>';
+                    });
+                }
+
+                window.loadRecords = loadRecords;
+
+                function renderPagination(total, active) {
+                    let html = '';
+                    html += '<li class="page-item ' + (active === 0 ? 'disabled' : '') + '"><a class="page-link" href="javascript:void(0)" onclick="loadRecords(' + (active - 1) + ')">Previous</a></li>';
+                    
+                    const range = 2;
+                    if (active > range) {
+                        html += '<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="loadRecords(0)">1</a></li>';
+                        if (active > range + 1) {
+                            html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                        }
+                    }
+
+                    for (let i = Math.max(0, active - range); i <= Math.min(total - 1, active + range); i++) {
+                        html += '<li class="page-item ' + (i === active ? 'active' : '') + '"><a class="page-link" href="javascript:void(0)" onclick="loadRecords(' + i + ')">' + (i + 1) + '</a></li>';
+                    }
+
+                    if (active < total - range - 1) {
+                        if (active < total - range - 2) {
+                            html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                        }
+                        html += '<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="loadRecords(' + (total - 1) + ')">' + total + '</a></li>';
+                    }
+                    
+                    html += '<li class="page-item ' + (active >= total - 1 || total === 0 ? 'disabled' : '') + '"><a class="page-link" href="javascript:void(0)" onclick="loadRecords(' + (active + 1) + ')">Next</a></li>';
+                    document.getElementById('paginationNav').innerHTML = html;
+                }
+
+                window.openEditModal = function(item) {
+                    document.getElementById('editGlId').value = item.id;
+                    document.getElementById('editAccountNumber').value = item.accountNumber;
+                    document.getElementById('editDescription').value = item.description;
+                    document.getElementById('editType').value = item.type;
+                    document.getElementById('editBu').value = item.bu;
+                    document.getElementById('editConsoleGroup').value = item.consoleGroup;
+                    document.getElementById('editCategoryGroup').value = item.categoryGroup;
+                    document.getElementById('editPlHeaders').value = item.plHeaders;
+                    
+                    const myModal = new bootstrap.Modal(document.getElementById('editModal'));
+                    myModal.show();
+                };
+
+                document.getElementById('rowLimit').addEventListener('change', function() {
+            	    currentPage = 0; 
+                    loadRecords(0);
+                }); 
+                
+                document.getElementById('accountNumberFilter').addEventListener('input', function() {
+                    loadRecords(0);
+                });
+
+                document.getElementById('buFilter').addEventListener('input', function() {
+                    loadRecords(0);
+                });
+
+                document.getElementById('editGlForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const glId = document.getElementById('editGlId').value; 
+                    const updatedData = {
+                        accountNumber: document.getElementById('editAccountNumber').value,
+                        description: document.getElementById('editDescription').value,
+                        type: document.getElementById('editType').value,
+                        bu: document.getElementById('editBu').value,
+                        consoleGroup: document.getElementById('editConsoleGroup').value,
+                        categoryGroup: document.getElementById('editCategoryGroup').value,
+                        plHeaders: document.getElementById('editPlHeaders').value                  
+                    };
+
+                    fetch(API_URL + 'update/' + glId, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(updatedData)
+                    })
+                    .then(response => {
+                        if(!response.ok) throw new Error();
+                        alert('Record updated successfully!');
+                        bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+                        loadRecords(currentPage);
+                    })
+                    .catch(() => {
+                        alert('Failed to update record');
+                    });
+                });
+                
+                document.getElementById('exportBtn').addEventListener('click', function () {
+                    const accountNumber = document.getElementById('accountNumberFilter').value.trim();
+                    const bu = document.getElementById('buFilter').value.trim();
+                    window.location.href = API_URL + 'export?accountNumber=' + encodeURIComponent(accountNumber) + '&bu=' + encodeURIComponent(bu);
+                });
+                
+                window.deleteSelectedRecords = function () {
+                    const selectedIds = [];
+                    document.querySelectorAll('.rowCheckbox:checked').forEach(cb => {
+                        selectedIds.push(Number(cb.value));
+                    });
+
+                    if (selectedIds.length === 0) {
+                        alert('Please select records');
+                        return;
+                    }
+                    if (!confirm('Delete selected records?')) {
+                        return;
+                    }
+
+                    fetch(API_URL + 'delete', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ ids: selectedIds })
+                    })
+                    .then(async res => {
+                        let responseText = await res.text();
+                        let data = {};
+                        if (responseText) data = JSON.parse(responseText);
+
+                        if (!res.ok) {
+                            throw new Error(data.error || data.message || 'Delete failed');
+                        }
+                        alert(data.message || 'Records deleted successfully');
+                        loadRecords(currentPage);
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert(err.message || 'Failed to delete');
+                    });
+                };
+                
+                document.addEventListener('change', function (e) {
+                    if (e.target.id === 'selectAll') {
+                        document.querySelectorAll('.rowCheckbox').forEach(cb => {
+                            cb.checked = e.target.checked;
+                        });
+                    }
+                });
+
+                loadRecords(0);
+            })();
+        </script>
+    </th:block>
+</body>
+</html>

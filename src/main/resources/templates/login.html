@@ -1,0 +1,525 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Re FinCoreHub | Login</title>
+    
+    <link rel="icon" type="image/x-icon" th:href="@{/images/favicon.ico}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        window.APP_CONFIG = {
+            contextPath: /*[[${request.contextPath}]]*/ '/fincorehub',
+            apiBaseUrl: /*[[${request.contextPath + '/api/'}]]*/ '/fincorehub/api/',
+        };
+        /*]]>*/
+    </script>
+    
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-gradient-start: #0f172a;
+            --bg-gradient-end: #1e3a8a;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        body {
+            background-color: #f8fafc;
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .split-container {
+            min-height: 100vh;
+            display: flex;
+            width: 100vw;
+        }
+
+        /* Left Side: Brand Hero Visual (Desktop & Large Tablets Only) */
+        .hero-side {
+            flex: 1.2;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 60px;
+            color: #ffffff;
+        }
+
+        .hero-side::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 80% 20%, rgba(37, 99, 235, 0.25) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            max-width: 500px;
+            margin: auto 0;
+        }
+
+        .hero-title {
+            font-size: 2.75rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1.2;
+            margin-bottom: 20px;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            color: #cbd5e1;
+            line-height: 1.6;
+            font-weight: 300;
+        }
+
+        /* Right Side: Login Form Canvas Container */
+        .form-side {
+            flex: 1;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 60px;
+        }
+
+        .form-container {
+            width: 100%;
+            max-width: 400px;
+            margin: auto;
+        }
+
+        /* Custom Logo Box Design */
+        .brand-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .logo-box {
+            width: 50px;
+            height: 50px;
+            background: #ffffff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            flex-shrink: 0;
+        }
+
+        .form-side .logo-box {
+            background: #f1f5f9;
+        }
+
+        .logo-img { 
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .app-title { 
+            font-size: 1.8rem; 
+            font-weight: 700; 
+            color: var(--text-dark);
+            letter-spacing: -0.03em;
+        }
+
+        .form-header-text {
+            margin-bottom: 30px;
+        }
+
+        .form-header-text h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .form-header-text p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Modernized Form Inputs */
+        .form-floating {
+            margin-bottom: 20px;
+        }
+
+        .form-floating > .form-control {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding-left: 45px;
+            padding-right: 45px;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            height: 58px;
+            background-color: #ffffff;
+        }
+
+        .form-floating > .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+            background-color: #ffffff;
+        }
+
+        .form-floating > label {
+            padding-left: 45px;
+            color: var(--text-muted);
+        }
+
+        .form-floating > .form-control:focus ~ label,
+        .form-floating > .form-control:not(:placeholder-shown) ~ label {
+            transform: scale(0.85) translateY(-0.75rem) translateX(0.15rem) !important;
+            padding-left: 45px !important;
+            background-color: transparent !important;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            z-index: 5;
+            pointer-events: none;
+            transition: color 0.2s;
+        }
+
+        .password-toggle-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            z-index: 5;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .password-toggle-icon:hover {
+            color: var(--primary-color);
+        }
+
+        .form-floating > .form-control:focus ~ .input-icon {
+            color: var(--primary-color);
+        }
+
+        /* Modern Login Button */
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            font-weight: 600;
+            font-size: 1rem;
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-login:hover { 
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        /* Feedback Messages with Animation Support */
+        .alert { 
+            border-radius: 10px;
+            border: none;
+            font-size: 0.9rem;
+            padding: 14px;
+            margin-top: 25px;
+            display: flex;
+            align-items: center;
+            opacity: 1;
+            transition: opacity 0.6s ease, transform 0.6s ease, margin-top 0.6s ease, padding 0.6s ease, height 0.6s ease;
+            overflow: hidden;
+        }
+        .alert-danger { background-color: #fef2f2; color: #dc2626; }
+        .alert-success { background-color: #f0fdf4; color: #16a34a; }
+
+        .alert-fade-out {
+            opacity: 0;
+            transform: translateY(-8px);
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            height: 0 !important;
+        }
+
+        /* Footer Stylings */
+        .footer-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 24px;
+            margin-top: 40px;
+        }
+
+        .footer-text a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer-text a:hover {
+            text-decoration: underline;
+        }
+
+        .powered-by {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 18px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        
+        .powered-by img { 
+            height: 32px; /* Increased from 20px to make it slightly bigger */
+            width: auto;
+            object-fit: contain;
+            margin-top: -2px; /* Subtle optical balance adjustment */
+        }
+
+        /* --- MOBILE & TABLET DEVICE COMPATIBILITY BREAKPOINTS --- */
+        @media (max-width: 991.98px) {
+            body {
+                background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+                overflow-y: auto;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px 10px;
+            }
+
+            .split-container {
+                min-height: auto;
+                height: auto;
+                width: 100%;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .hero-side { 
+                display: none !important; 
+            }
+
+            .form-side { 
+                flex: none;
+                width: 100%;
+                max-width: 460px;
+                background: #ffffff;
+                border-radius: 16px;
+                padding: 40px 30px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            }
+
+            .form-container {
+                margin: 0;
+                max-width: 100%;
+            }
+
+            .footer-text {
+                margin-top: 30px;
+                padding-top: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .form-side {
+                padding: 30px 20px;
+            }
+            .app-title {
+                font-size: 1.6rem;
+            }
+            .form-header-text h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="split-container">
+    
+    <div class="hero-side">
+        <div class="brand-wrapper">
+            <div class="logo-box">
+                <img th:src="@{/images/logo.png}" alt="Re Logo" class="logo-img">
+            </div>
+            <span class="app-title text-white m-0">FinCoreHub</span>
+        </div>
+        
+        <div class="hero-content">
+            <h1 class="hero-title">Integrated Financial Governance Platform.</h1>
+            
+            <p id="heroTextWelcome" class="hero-subtitle">
+                Welcome to FinCoreHub. Optimize enterprise value through real-time General Ledger tracking, multidimensional Profit Center performance analytics, and structured corporate budget control—all unified within a secure workspace.
+            </p>
+        </div>
+        
+        <div class="small text-white-50">
+            &copy; Re Sustainability Ltd. All rights reserved.
+        </div>
+    </div>
+
+    <div class="form-side">
+        <div class="form-container">
+            
+            <div class="brand-wrapper d-lg-none">
+                <div class="logo-box">
+                    <img th:src="@{/images/logo.png}" alt="Re Logo" class="logo-img">
+                </div>
+                <span class="app-title m-0">FinCoreHub</span>
+            </div>
+            
+            <div class="form-header-text">
+                <h2>Sign In</h2>
+                <p>Please enter your credentials to access your account.</p>
+            </div>
+            
+            <form th:action="@{/login}" method="post" autocomplete="new-password">
+                <div class="form-floating position-relative">
+                    <i class="bi bi-person input-icon"></i>
+                    <input type="text" class="form-control" id="username" name="username" 
+                           placeholder=" " required readonly onfocus="this.removeAttribute('readonly');">
+                    <label for="username">Username</label>
+                </div>
+                
+                <div class="form-floating position-relative">
+                    <i class="bi bi-lock input-icon"></i>
+                    <input type="password" class="form-control" id="password" name="password" 
+                           placeholder=" " required readonly onfocus="this.removeAttribute('readonly');">
+                    <label for="password">Password</label>
+                    <i class="bi bi-eye password-toggle-icon" id="passwordToggle"></i>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-login mt-2" onclick="sessionStorage.setItem('explicit_logout_triggered', 'true');">
+                    Sign In<i class="bi bi-arrow-right ms-2"></i>
+                </button>
+            </form>
+            
+            <div th:if="${param.error}" class="alert alert-danger data-auto-dismiss" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i> Invalid username or password.
+            </div>
+            
+            <div th:if="${param.logout}" id="logoutAlert" class="alert alert-success data-auto-dismiss" role="alert">
+                <i class="bi bi-check-circle-fill me-2 fs-5"></i> You have been logged out successfully.
+            </div>
+            
+            <div class="footer-text">
+                <p class="mb-0">Re Sustainability Ltd &copy; <span id="currentYear"></span></p>
+                <p class="mt-2 mb-0 text-secondary">In case of any login issues, please reach out to</p>
+                <a href="mailto:it.helpdesk@resustainability.com">it.helpdesk@resustainability.com</a>
+                
+                <div class="powered-by">
+                    <span>Powered by</span>
+                    <img th:src="@{/images/logo.png}" alt="RE Logo Small">
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // Set Current Dynamic Year
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+    // Password Visibility Toggle Logic
+    document.getElementById('passwordToggle').addEventListener('click', function () {
+        const passwordField = document.getElementById('password');
+        
+        if(passwordField.hasAttribute('readonly')) {
+            passwordField.removeAttribute('readonly');
+        }
+        
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            this.classList.remove('bi-eye');
+            this.classList.add('bi-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            this.classList.remove('bi-eye-slash');
+            this.classList.add('bi-eye');
+        }
+    });
+
+    // Verify if logout alert is real or forced on cold-load by Spring Security redirect config
+    document.addEventListener("DOMContentLoaded", function() {
+        const logoutAlertElement = document.getElementById('logoutAlert');
+        const heroText = document.getElementById('heroTextWelcome');
+        
+        if (window.location.search.includes('logout')) {
+            const trueLogout = sessionStorage.getItem('explicit_logout_triggered');
+            
+            if (!trueLogout) {
+                if (logoutAlertElement) {
+                    logoutAlertElement.remove();
+                }
+            } else {
+                if (heroText) {
+                    heroText.textContent = "Welcome back! Optimize enterprise value through real-time General Ledger tracking, multidimensional Profit Center performance analytics, and structured corporate budget control—all unified within a secure workspace.";
+                }
+                sessionStorage.removeItem('explicit_logout_triggered');
+            }
+        }
+        
+        if (window.location.search.includes('error') && heroText) {
+            heroText.textContent = "Welcome back! Optimize enterprise value through real-time General Ledger tracking, multidimensional Profit Center performance analytics, and structured corporate budget control—all unified within a secure workspace.";
+        }
+    });
+
+    // Fallback script to handle float animations 
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            const inputs = document.querySelectorAll('.form-control');
+            inputs.forEach(input => {
+                if (input.value.trim() !== "") {
+                    const label = input.parentElement.querySelector('label');
+                    if (label) {
+                        label.style.transform = "scale(0.85) translateY(-0.75rem) translateX(0.15rem)";
+                    }
+                }
+            });
+        }, 150);
+    });
+
+    // Notification Auto-Dismiss Script
+    document.addEventListener("DOMContentLoaded", function () {
+        const alerts = document.querySelectorAll('.data-auto-dismiss');
+        alerts.forEach(function (alert) {
+            if(document.body.contains(alert)) {
+                setTimeout(function () {
+                    alert.classList.add('alert-fade-out');
+                    setTimeout(function () {
+                        alert.remove();
+                    }, 600); 
+                }, 2000);
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

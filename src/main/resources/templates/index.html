@@ -1,0 +1,172 @@
+
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}">
+<head>
+    <title>Home | FinCoreHub</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+
+ <th:block layout:fragment="styles">
+        <style>
+            :root {
+                --fin-blue: #0052cc;
+                --fin-bg: #f4f7fa;
+                --fin-card-bg: #ffffff;
+                --fin-text: #172b4d;
+                --fin-muted: #6b778c;
+            }
+
+            .text-decoration-none { color: inherit; }
+
+            /* CLEAN BREADCRUMB HEADER (No background cards or borders) */
+            .top-breadcrumb-bar { 
+                padding: 5px 0;
+                font-size: 0.95rem;
+            }
+
+            /* CORE FINANCE SYSTEM DASHBOARD SELECTION CARDS */
+            .finance-card {
+                background: var(--fin-card-bg);
+                border-radius: 10px;
+                padding: 24px 16px; 
+                height: 100%;
+                border: 1px solid rgba(15, 23, 42, 0.06);
+                box-shadow: 0 2px 8px rgba(15, 23, 42, 0.02);
+                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .finance-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 12px 20px rgba(0, 82, 204, 0.08);
+                border-color: var(--fin-blue);
+            }
+
+            .finance-icon {
+                font-size: 1.5rem; 
+                color: var(--fin-blue);
+                margin-bottom: 16px;
+                width: 48px; 
+                height: 48px; 
+                background: #ebf5ff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 10px;
+            }
+
+            .finance-card h6 { 
+                font-weight: 700; 
+                color: var(--fin-text); 
+                margin-bottom: 8px; 
+                font-size: 1rem; 
+            }
+            
+            .x-small { 
+                color: var(--fin-muted); 
+                font-size: 0.825rem; 
+                line-height: 1.45; 
+                flex-grow: 1; 
+                margin-bottom: 0; 
+            }
+
+            .card-action {
+                margin-top: 16px;
+                font-size: 0.95rem;
+                color: var(--fin-blue);
+                transition: transform 0.2s ease;
+            }
+            
+            .finance-card:hover .card-action {
+                transform: translateX(3px);
+            }
+
+            .branding-divider { 
+                height: 1px; 
+                background: linear-gradient(to right, transparent, #e2e8f0, transparent); 
+                width: 100%; 
+            }
+        </style>
+    </th:block>
+
+<body>
+    <div layout:fragment="content">
+        <div class="top-breadcrumb-bar mb-4">
+            <span class="text-muted fw-medium"><i class="bi bi-house-door me-2"></i>Home / Financial Dashboard</span>
+        </div>
+        
+        <div class="container-fluid py-3">
+            <div class="row justify-content-center">
+                <div class="col-xl-10 text-center mb-5">
+                    <h1 class="fw-bold text-dark h2">Re FinCore<span class="text-primary">Hub</span></h1>
+                    <p class="text-secondary">Unified Core for Sustainability & Financial Governance</p>
+                </div>
+
+                <div class="col-xl-12">
+                    <div class="row g-3 justify-content-center">
+                        
+                        <div class="col-md-3">
+                            <a th:href="@{/gl/records}" class="text-decoration-none">
+                                <div class="finance-card">
+                                    <div class="finance-icon"><i class="bi bi-calculator"></i></div>
+                                    <h6>General Ledger</h6>
+                                    <p class="x-small">Oversee chart of accounts and journal entries.</p>
+                                    <div class="card-action"><i class="bi bi-arrow-right"></i></div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col-md-3">
+                            <a th:href="@{/pc/records}" class="text-decoration-none">
+                                <div class="finance-card">
+                                    <div class="finance-icon"><i class="bi bi-building-gear"></i></div>
+                                    <h6>Profit Centers</h6>
+                                    <p class="x-small">Manage revenue units and organizational hierarchy.</p>
+                                    <div class="card-action"><i class="bi bi-arrow-right"></i></div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col-md-3">
+                            <a th:href="@{/revenue/budget/records}" class="text-decoration-none">
+                                 <div class="finance-card">
+                                     <div class="finance-icon"><i class="bi bi-currency-exchange"></i></div>
+                                     <h6>Revenue Budgets</h6>
+                                     <p class="x-small">Track monthly revenue targets and site-wise budget records.</p>
+                                     <div class="card-action"><i class="bi bi-arrow-right"></i></div>
+                                </div>
+                             </a>
+                       </div>
+
+                       <div class="col-md-3">
+                            <a th:href="@{/ebitda/budget/records}" class="text-decoration-none">
+                               <div class="finance-card">
+                                 <div class="finance-icon"><i class="bi bi-pie-chart-fill"></i></div>
+                                 <h6>EBITDA Budgets</h6>
+                                 <p class="x-small">Monitor operational profitability and margin budget goals.</p>
+                                 <div class="card-action"><i class="bi bi-arrow-right"></i></div>
+                            </div>
+                         </a>
+                     </div>
+
+                    </div>
+                </div>
+
+                <div class="col-xl-8 text-center mt-5 pt-4">
+                    <div class="branding-divider mb-4"></div>
+                    <img th:src="@{/images/logo.png}" alt="Re Logo" style="width: 60px;" class="mb-2">
+                    <p class="small text-uppercase fw-bold text-muted" style="letter-spacing: 2px; font-size: 0.7rem;">Excellence in Precision</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+   
+</body>
+</html>

@@ -1,0 +1,507 @@
+ 
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{common/layout}">
+<head>
+    <title>User Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container-fluid mt-3 px-4">
+            <div class="top-nav mb-3"><span class="text-muted">User Management / Users List</span></div>
+            
+            <div class="card shadow-sm border-0 table-card">
+                <div class="card-header bg-white py-3 px-3 d-flex flex-wrap justify-content-between align-items-center gap-2 custom-card-header">
+                    <div class="d-flex align-items-center gap-2 custom-header-left">
+                        <a th:href="@{/}" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
+                            <i class="bi bi-arrow-left"></i> Back
+                        </a>
+                        <h5 class="mb-0 text-primary fw-bold text-nowrap">Users</h5>
+                    </div>
+                    
+                    <div class="d-flex align-items-center gap-1 custom-header-show">
+                        <span class="small text-secondary text-nowrap">Show</span>
+                        <select id="rowLimit" class="form-select form-select-sm" style="width: 75px;">
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+
+                    <div class="custom-header-right">
+                        <a th:href="@{/users/add}" class="btn btn-primary btn-sm d-flex align-items-center gap-1 justify-content-center">
+                            <i class="bi bi-plus-lg"></i> Add User
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-body p-0 position-relative">
+                    <div class="table-responsive w-100 user-table-wrapper">
+                        <table class="table table-hover align-middle mb-0 text-nowrap user-table">
+                            <thead class="table-light text-secondary small fw-normal">
+                                <tr>
+                                    <th class="ps-3 fw-semibold">ID</th>
+                                    <th class="fw-semibold">Username</th>
+                                    <th class="fw-semibold">Full Name</th>
+                                    <th class="fw-semibold">Email</th>
+                                    <th class="fw-semibold">Role</th>
+                                    <th class="fw-semibold">Status</th>
+                                    <th class="fw-semibold">Created On</th>
+                                    <th class="text-center pe-3 fw-semibold sticky-col">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="pagination-footer flex-column flex-sm-row gap-3 text-center text-sm-start px-3 py-3">
+                    <div class="text-muted small" id="recordCountInfo">Showing 0 to 0 of 0 entries</div>
+                    <nav><ul class="pagination pagination-sm mb-0 flex-wrap justify-content-center" id="paginationNav"></ul></nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block layout:fragment="modal">
+        <div class="modal fade" id="editModal" tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content border-0 shadow-sm">
+                    <div class="modal-header bg-white border-bottom py-2">
+                        <h5 class="modal-title fw-bold text-primary">Edit User</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form id="editUserForm">
+                        <div class="modal-body p-4">
+                            <input type="hidden" id="editUserId">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-secondary">Username</label>
+                                    <input type="text" id="editUsername" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-secondary">Full Name</label>
+                                    <input type="text" id="editFullName" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-secondary">Email</label>
+                                    <input type="email" id="editEmail" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-secondary">Role</label>
+                                    <select id="editRole" class="form-select form-select-sm" required>
+                                        <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+                                        <option value="DEFAULT_USER">DEFAULT_USER</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 mt-4">
+                                    <div class="form-check form-switch d-flex align-items-center gap-2 ps-0">
+                                        <input class="form-check-input ms-0" type="checkbox" id="editActive">
+                                        <label class="form-check-label text-secondary fw-semibold mb-0" for="editActive">Active Status</label>
+                                    </div>
+                                    <small class="text-muted d-block mt-1">Inactive users cannot login to the system.</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light py-2 border-0">
+                            <button type="button" class="btn btn-light border btn-sm px-4" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary btn-sm px-4">Update User</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal fade" id="resetPasswordModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-sm">
+                    <div class="modal-header bg-white border-bottom py-2">
+                        <h5 class="modal-title fw-bold text-primary">Reset Password</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form id="resetPasswordForm">
+                        <div class="modal-body p-4">
+                            <input type="hidden" id="resetPasswordUserId">
+                            <div class="mb-3">
+                                <label class="form-label text-secondary">New Password</label>
+                                <input type="password" id="newPassword" class="form-control form-control-sm" required minlength="6">
+                                <small class="text-muted d-block mt-1">Password must be at least 6 characters.</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-secondary">Confirm Password</label>
+                                <input type="password" id="confirmPassword" class="form-control form-control-sm" required minlength="6">
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light py-2 border-0">
+                            <button type="button" class="btn btn-light border btn-sm px-4" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary btn-sm px-4">Reset Password</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </th:block>
+    
+    <th:block layout:fragment="styles">
+        <style>
+            .pagination-footer { 
+                display: flex; 
+                justify-content: space-between; 
+                align-items: center; 
+                background: #fff; 
+                border-top: 1px solid #dee2e6; 
+            }
+            .table-card { border-radius: 8px; }
+            .status-active { color: #2ecc71; }
+            .status-inactive { color: #e74c3c; }
+            
+            .table th { padding: 12px 10px; }
+            .table td { padding: 10px 10px; }
+
+            .user-table-wrapper {
+                overflow: auto;
+                max-height: 70vh;
+                scrollbar-width: none;          
+                -ms-overflow-style: none;       
+            }
+            .user-table-wrapper::-webkit-scrollbar {
+                display: none;                  
+            }
+            .user-table {
+                min-width: 1100px;
+            }
+
+            .user-table thead th {
+                position: sticky;
+                top: 0;
+                z-index: 25 !important;
+                background-color: #f8f9fa !important;
+                border-bottom: 1px solid #dee2e6;
+            }
+
+            .sticky-col {
+                position: sticky;
+                right: 0;
+                background-color: #fff !important;
+                z-index: 12 !important;
+                box-shadow: -4px 0 8px rgba(0, 0, 0, 0.05);
+                width: 110px;
+                min-width: 110px;
+                max-width: 110px;
+            }
+            thead .sticky-col {
+                z-index: 30 !important;
+            }
+            .user-table tbody tr:hover .sticky-col {
+                background-color: #f1f5f9 !important;
+            }
+
+            @media (min-width: 576px) {
+                .custom-header-show {
+                    margin-left: auto !important;
+                }
+            }
+
+            @media (max-width: 575.98px) {
+                .custom-card-header {
+                    display: flex !important;
+                    flex-wrap: wrap !important;
+                    justify-content: space-between !important;
+                }
+                .custom-header-left {
+                    order: 1 !important;
+                }
+                .custom-header-show {
+                    order: 2 !important;
+                }
+                .custom-header-right {
+                    order: 3 !important;
+                    width: 100% !important;
+                    margin-top: 4px !important;
+                }
+                .custom-header-right .btn {
+                    width: 100% !important;
+                }
+                .pagination .page-link {
+                    min-width: 28px;
+                    padding: 4px 6px;
+                    font-size: 11px;
+                }
+            }
+
+            /* Ensures layout containers never clip globally mounted alerts */
+            .swal2-container {
+                z-index: 99999 !important;
+            }
+
+            /* --- FIX FOR BACKGROUND RIGHT SIDE EXPANDING/SHIFTING --- */
+            body.swal2-shown {
+                overflow: auto !important;
+                padding-right: 0 !important;
+            }
+
+            /* --- NEW SIZING CLASS FOR SMALL SWEETALERT CARDS --- */
+            .swal-custom-small-popup {
+                width: 360px !important; 
+                padding: 1.25rem !important;
+                border-radius: 8px !important;
+            }
+            .swal-custom-small-popup .swal2-title {
+                font-size: 1.2rem !important;
+                font-weight: 600 !important;
+                margin-top: 10px !important;
+            }
+            .swal-custom-small-popup .swal2-html-container {
+                font-size: 0.875rem !important;
+                color: #6c757d !important;
+                margin-top: 8px !important;
+            }
+            .swal-custom-small-popup .swal2-icon {
+                transform: scale(0.75);
+                margin: 10px auto 0 auto !important;
+            }
+            .swal-custom-small-popup .swal2-actions {
+                margin-top: 15px !important;
+            }
+            .swal-custom-small-popup .swal2-actions button {
+                font-size: 0.85rem !important;
+                padding: 6px 16px !important;
+                border-radius: 4px !important;
+            }
+        </style>
+    </th:block>
+    
+    <th:block layout:fragment="scripts">
+        <script th:inline="javascript">
+            (function() {
+                function loadRecords(pageNumber) {
+                    var pageSize = parseInt(document.getElementById('rowLimit').value);
+                    var tableBody = document.getElementById('usersTableBody');
+                    var currentUsername = document.querySelector('.user-info span') ? 
+                        document.querySelector('.user-info span').textContent.trim() : '';
+
+                    tableBody.innerHTML = '<tr><td colspan="8" class="text-center py-5">' +
+                        '<div class="spinner-border spinner-border-sm text-primary me-2"></div>' +
+                        '<span class="text-muted">Loading...</span></td></tr>';
+
+                    fetch(window.APP_CONFIG.apiUrl('users/list?page=' + pageNumber + '&size=' + pageSize))
+                    .then(function(response) { return response.json(); })
+                    .then(function(res) {
+                        var data = res.data ? res.data.content || [] : [];
+                        var total = res.data ? res.data.totalElements || 0 : 0;
+                        var totalPages = res.data ? res.data.totalPages || 0 : 0;
+
+                        if (data.length === 0) {
+                            tableBody.innerHTML = '<tr><td colspan="8" class="text-center py-5 text-muted">No users found</td></tr>';
+                            return;
+                        }
+
+                        var start = (pageNumber * pageSize) + 1;
+                        var end = start + data.length - 1;
+                        document.getElementById('recordCountInfo').textContent = 
+                            'Showing ' + start + ' to ' + end + ' of ' + total + ' entries';
+
+                        var html = '';
+                        data.forEach(function(u) {
+                            var isSelf = u.username === currentUsername;
+                            var statusClass = u.active ? 'status-active' : 'status-inactive';
+                            var statusText = u.active ? 'Active' : 'Inactive';
+                            var roleBadge = u.role === 'SUPER_ADMIN' 
+                                ? '<span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1">SUPER_ADMIN</span>'
+                                : '<span class="badge bg-info bg-opacity-10 text-info px-2 py-1">DEFAULT_USER</span>';
+                            
+                            html += '<tr>' +
+                                '<td class="ps-3">' + u.id + '</td>' +
+                                '<td>' + u.username + (isSelf ? '<span class="badge bg-secondary ms-1">You</span>' : '') + '</td>' +
+                                '<td>' + u.fullName + '</td>' +
+                                '<td>' + u.email + '</td>' +
+                                '<td>' + roleBadge + '</td>' +
+                                '<td><i class="bi bi-circle-fill small me-1 ' + statusClass + '" style="font-size:0.65rem;"></i>' + statusText + '</td>' +
+                                '<td>' + (u.createdOn ? new Date(u.createdOn).toLocaleDateString() : '-') + '</td>' +
+                                '<td class="text-center pe-3 sticky-col">' +
+                                    '<button class="btn btn-sm btn-outline-primary me-1 py-0 px-2" title="Edit" onclick="openEditModal(' + JSON.stringify(u).replace(/"/g, '&quot;') + ')">' +
+                                        '<i class="bi bi-pencil small"></i>' +
+                                    '</button>' +
+                                    '<button class="btn btn-sm btn-outline-warning me-1 py-0 px-2" title="Reset Password" onclick="openResetPasswordModal(' + u.id + ')">' +
+                                        '<i class="bi bi-key small"></i>' +
+                                    '</button>';
+                            
+                            if (!isSelf) {
+                                html += '<button class="btn btn-sm py-0 px-2 ' + (u.active ? 'btn-outline-danger' : 'btn-outline-success') + '" ' +
+                                        'title="' + (u.active ? 'Deactivate' : 'Activate') + '" onclick="toggleStatus(' + u.id + ', ' + !u.active + ')">' +
+                                        '<i class="bi bi-' + (u.active ? 'x-lg' : 'check-lg') + ' small"></i>' +
+                                    '</button>';
+                            }
+                            
+                            html += '</td></tr>';
+                        });
+                        
+                        tableBody.innerHTML = html;
+                        renderPagination(totalPages, pageNumber);
+                    });
+                }
+
+                function renderPagination(total, active) {
+                    var html = '<li class="page-item ' + (active === 0 ? 'disabled' : '') + '">' +
+                        '<a class="page-link" href="#" onclick="loadRecords(' + (active - 1) + '); return false;">Previous</a></li>';
+                    
+                    for (var i = 0; i < total; i++) {
+                        html += '<li class="page-item ' + (i === active ? 'active' : '') + '">' +
+                            '<a class="page-link" href="#" onclick="loadRecords(' + i + '); return false;">' + (i + 1) + '</a></li>';
+                    }
+                    
+                    html += '<li class="page-item ' + (active >= total - 1 ? 'disabled' : '') + '">' +
+                        '<a class="page-link" href="#" onclick="loadRecords(' + (active + 1) + '); return false;">Next</a></li>';
+                    
+                    document.getElementById('paginationNav').innerHTML = html;
+                }
+
+                window.openEditModal = function(user) {
+                    document.getElementById('editUserId').value = user.id;
+                    document.getElementById('editUsername').value = user.username;
+                    document.getElementById('editFullName').value = user.fullName;
+                    document.getElementById('editEmail').value = user.email;
+                    document.getElementById('editRole').value = user.role;
+                    document.getElementById('editActive').checked = user.active;
+                    
+                    new bootstrap.Modal(document.getElementById('editModal')).show();
+                };
+
+                window.openResetPasswordModal = function(userId) {
+                    document.getElementById('resetPasswordUserId').value = userId;
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                    new bootstrap.Modal(document.getElementById('resetPasswordModal')).show();
+                };
+
+                window.toggleStatus = function(id, active) {
+                    var action = active ? 'activate' : 'deactivate';
+                    
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: 'Do you want to ' + action + ' this user account?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: active ? '#2ecc71' : '#d33',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, ' + action + '!',
+                        cancelButtonText: 'Cancel',
+                        customClass: { popup: 'swal-custom-small-popup' }
+                    }).then(function(result) {
+                        if (result.isConfirmed) {
+                            fetch(window.APP_CONFIG.apiUrl('users/' + id + '/toggle-active?active=' + active), {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                            })
+                            .then(function() {
+                                Swal.fire({
+                                    title: 'Updated!', 
+                                    text: 'User status changed successfully.', 
+                                    icon: 'success',
+                                    customClass: { popup: 'swal-custom-small-popup' }
+                                });
+                                loadRecords(0);
+                            })
+                            .catch(function() { 
+                                Swal.fire({
+                                    title: 'Error', 
+                                    text: 'Failed to update user status.', 
+                                    icon: 'error',
+                                    customClass: { popup: 'swal-custom-small-popup' }
+                                }); 
+                            });
+                        }
+                    });
+                };
+
+                document.getElementById('editUserForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    var id = document.getElementById('editUserId').value;
+                    var data = {
+                        username: document.getElementById('editUsername').value,
+                        fullName: document.getElementById('editFullName').value,
+                        email: document.getElementById('editEmail').value,
+                        role: document.getElementById('editRole').value,
+                        active: document.getElementById('editActive').checked
+                    };
+
+                    fetch(window.APP_CONFIG.apiUrl('users/update/' + id), {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    })
+                    .then(function() {
+                        Swal.fire({ 
+                            icon: 'success', 
+                            title: 'Saved!', 
+                            text: 'User updated successfully.', 
+                            timer: 1500, 
+                            showConfirmButton: false,
+                            customClass: { popup: 'swal-custom-small-popup' } 
+                        });
+                        bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+                        loadRecords(0);
+                    })
+                    .catch(function() { 
+                        Swal.fire({ 
+                            icon: 'error', 
+                            title: 'Error', 
+                            text: 'Failed to update user parameters.',
+                            customClass: { popup: 'swal-custom-small-popup' } 
+                        }); 
+                    });
+                });
+
+                document.getElementById('resetPasswordForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    var id = document.getElementById('resetPasswordUserId').value;
+                    var newPass = document.getElementById('newPassword').value;
+                    var confirmPass = document.getElementById('confirmPassword').value;
+
+                    if (newPass !== confirmPass) {
+                        Swal.fire({ 
+                            icon: 'error', 
+                            title: 'Mismatch', 
+                            text: 'Passwords do not match.',
+                            customClass: { popup: 'swal-custom-small-popup' } 
+                        });
+                        return;
+                    }
+
+                    fetch(window.APP_CONFIG.apiUrl('users/' + id + '/reset-password?newPassword=' + encodeURIComponent(newPass)), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                    })
+                    .then(function() {
+                        Swal.fire({ 
+                            icon: 'success', 
+                            title: 'Reset Complete', 
+                            text: 'Password reset completed successfully.', 
+                            timer: 1500, 
+                            showConfirmButton: false,
+                            customClass: { popup: 'swal-custom-small-popup' } 
+                        });
+                        bootstrap.Modal.getInstance(document.getElementById('resetPasswordModal')).hide();
+                    })
+                    .catch(function() { 
+                        Swal.fire({ 
+                            icon: 'error', 
+                            title: 'Error', 
+                            text: 'Failed to complete credentials reset.',
+                            customClass: { popup: 'swal-custom-small-popup' } 
+                        }); 
+                    });
+                });
+
+                document.getElementById('rowLimit').addEventListener('change', function() { loadRecords(0); });
+                
+                window.loadRecords = loadRecords;
+                loadRecords(0);
+            })();
+        </script>
+    </th:block>
+</body>
+</html>

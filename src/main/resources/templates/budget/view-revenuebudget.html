@@ -1,0 +1,744 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}">
+
+<head>
+    <title>Budget Records</title>
+</head>
+
+<body>
+
+<div layout:fragment="content">
+
+    <div class="top-nav">
+        <span class="text-muted fw-medium">Revenue Budgets / Records</span>
+    </div>
+
+    <div class="container-fluid px-2 mt-4">
+
+        <div class="card shadow-sm border-0 table-card w-100">
+ 
+            <div class="card-header bg-white py-3 px-3">
+
+                <div class="row align-items-center g-3 mb-3">
+
+                    <div class="col-xl-4 col-lg-3 col-md-12 d-flex align-items-center gap-2">
+                        <a th:href="@{/}" class="btn btn-outline-secondary btn-sm text-nowrap">
+                            <i class="bi bi-arrow-left"></i> Back
+                        </a>
+                        <h5 class="mb-0 text-primary fw-bold text-nowrap">
+                           Revenue Budget Records
+                        </h5>
+                    </div>
+
+                    <div class="col-xl-8 col-lg-9 col-md-12 d-flex flex-wrap justify-content-end align-items-center gap-2">
+
+                        <input type="text"
+                               id="buFilter"
+                               class="form-control form-control-sm flex-grow-1 flex-sm-grow-0"
+                               placeholder="Search BU"
+                               style="width: 130px; min-width: 110px;">
+
+                        <input type="text"
+                               id="siteFilter"
+                               class="form-control form-control-sm flex-grow-1 flex-sm-grow-0"
+                               placeholder="Search Site"
+                               style="width: 130px; min-width: 110px;">
+
+                        <input type="text"
+                               id="financialYearFilter"
+                               class="form-control form-control-sm flex-grow-1 flex-sm-grow-0"
+                               placeholder="Financial Year"
+                               style="width: 130px; min-width: 110px;">
+                               
+                        <div class="d-flex align-items-center gap-1 ms-auto ms-sm-0">
+                            <span class="small text-muted text-nowrap">Show</span>
+                            <select id="rowLimit" class="form-select form-select-sm" style="width: 65px;">
+                                <option value="10" selected>10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="d-flex justify-content-start justify-content-sm-end align-items-center gap-2 flex-wrap">
+
+                    <button class="btn btn-danger btn-sm flex-grow-1 flex-sm-grow-0" onclick="deleteSelectedRecords()">
+                           <i class="bi bi-trash"></i> Delete
+                    </button>
+                    
+                    <button class="btn btn-success btn-sm flex-grow-1 flex-sm-grow-0" onclick="exportBudgetExcel()">
+                       <i class="bi bi-download"></i> Export
+                    </button>
+
+                    <a th:href="@{/revenue/budget/add}" class="btn btn-primary btn-sm flex-grow-1 flex-sm-grow-0 text-center">
+                        <i class="bi bi-plus-circle"></i> Add Revenue Budget
+                    </a>
+
+                </div>
+
+            </div>
+            
+            <div class="card-body p-0">
+
+                <div class="table-responsive budget-table-wrapper">
+
+                    <table class="table table-hover align-middle mb-0 budget-table">
+
+                        <thead class="table-light">
+
+                        <tr>
+
+                            <th class="sticky-checkbox">
+                                <input type="checkbox" id="selectAll">
+                            </th>
+
+                            <th class="sticky-id">S.No</th>
+
+                            <th class="sticky-bu">BU</th>
+
+                            <th class="sticky-sbu">SBU</th>
+
+                            <th class="sticky-site">Site</th>
+
+                            <th class="sticky-fy">Financial Year</th>
+
+                            <th class="month-col">Apr</th>
+                            <th class="month-col">May</th>
+                            <th class="month-col">Jun</th>
+                            <th class="month-col">Jul</th>
+                            <th class="month-col">Aug</th>
+                            <th class="month-col">Sep</th>
+                            <th class="month-col">Oct</th>
+                            <th class="month-col">Nov</th>
+                            <th class="month-col">Dec</th>
+                            <th class="month-col">Jan</th>
+                            <th class="month-col">Feb</th>
+                            <th class="month-col">Mar</th>
+
+                            <th>Total</th>
+
+                            <th class="sticky-action">
+                                Action
+                            </th>
+
+                        </tr>
+
+                        </thead>
+
+                        <tbody id="budgetTableBody"></tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+            <div class="pagination-footer flex-column flex-sm-row gap-3 text-center text-sm-start">
+
+                <div class="text-muted small" id="recordCountInfo">
+                    Showing 0 to 0 of 0 entries
+                </div>
+
+                <nav>
+                    <ul class="pagination pagination-sm mb-0 flex-wrap justify-content-center" id="paginationNav"></ul>
+                </nav>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<th:block layout:fragment="modal">
+
+<div class="modal fade" id="editModal" tabindex="-1">
+
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+
+        <div class="modal-content border-0 shadow">
+
+            <div class="modal-header bg-white border-bottom">
+
+                <h5 class="modal-title fw-bold text-primary">
+                    <i class="bi bi-pencil-square me-2"></i>
+                    Edit Budget Record
+                </h5>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+            </div>
+
+            <form id="editBudgetForm">
+
+                <div class="modal-body p-3 p-md-4">
+
+                    <input type="hidden" id="editId">
+
+                    <div class="row g-2 g-md-3">
+
+                        <div class="col-6 col-md-3">
+                            <label class="form-label fw-bold small">BU</label>
+                            <input type="text" id="editBu" class="form-control form-control-sm bg-light" required readonly>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <label class="form-label fw-bold small">SBU</label>
+                            <input type="text" id="editSbu" class="form-control form-control-sm bg-light" required readonly>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <label class="form-label fw-bold small">Site</label>
+                            <input type="text" id="editSite" class="form-control form-control-sm bg-light" required readonly>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <label class="form-label fw-bold small">Financial Year</label>
+                            <input type="text" id="editFinancialYear" class="form-control form-control-sm bg-light" required readonly>
+                        </div>
+
+                        <div class="col-4 col-sm-3 col-md-2">
+                            <label class="form-label fw-bold small">Apr</label>
+                            <input type="number" step="0.01" id="editApr" class="form-control form-control-sm">
+                        </div>
+
+                        <div class="col-4 col-sm-3 col-md-2">
+                            <label class="form-label fw-bold small">May</label>
+                            <input type="number" step="0.01" id="editMay" class="form-control form-control-sm">
+                        </div>
+
+                        <div class="col-4 col-sm-3 col-md-2">
+                            <label class="form-label fw-bold small">Jun</label>
+                            <input type="number" step="0.01" id="editJun" class="form-control form-control-sm">
+                        </div>
+
+                        <div class="col-4 col-sm-3 col-md-2">
+                            <label class="form-label fw-bold small">Jul</label>
+                            <input type="number" step="0.01" id="editJul" class="form-control form-control-sm">
+                        </div>
+
+                        <div class="col-4 col-sm-3 col-md-2">
+                            <label class="form-label fw-bold small">Aug</label>
+                            <input type="number" step="0.01" id="editAug" class="form-control form-control-sm">
+                        </div>
+
+                        <div class="col-4 col-sm-3 col-md-2">
+                            <label class="form-label fw-bold small">Sep</label>
+                            <input type="number" step="0.01" id="editSep" class="form-control form-control-sm">
+                        </div>
+
+                        <div class="col-4 col-sm-3 col-md-2">
+                            <label class="form-label fw-bold small">Oct</label>
+                            <input type="number" step="0.01" id="editOct" class="form-control form-control-sm">
+                        </div>
+
+                        <div class="col-4 col-sm-3 col-md-2">
+                            <label class="form-label fw-bold small">Nov</label>
+                            <input type="number" step="0.01" id="editNov" class="form-control form-control-sm">
+                        </div>
+
+                        <div class="col-4 col-sm-3 col-md-2">
+                            <label class="form-label fw-bold small">Dec</label>
+                            <input type="number" step="0.01" id="editDec" class="form-control form-control-sm">
+                        </div>
+
+                        <div class="col-4 col-sm-3 col-md-2">
+                            <label class="form-label fw-bold small">Jan</label>
+                            <input type="number" step="0.01" id="editJan" class="form-control form-control-sm">
+                        </div>
+
+                        <div class="col-4 col-sm-3 col-md-2">
+                            <label class="form-label fw-bold small">Feb</label>
+                            <input type="number" step="0.01" id="editFeb" class="form-control form-control-sm">
+                        </div>
+
+                        <div class="col-4 col-sm-3 col-md-2">
+                            <label class="form-label fw-bold small">Mar</label>
+                            <input type="number" step="0.01" id="editMar" class="form-control form-control-sm">
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Update Changes</button>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+</th:block>
+
+
+<th:block layout:fragment="scripts">
+
+<style>
+.pagination-footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 15px;
+    background:#fff;
+    border-top:1px solid #dee2e6;
+}
+
+.table-card{
+    border-radius:10px;
+    overflow:hidden;
+}
+
+.pagination .page-link{
+    min-width:34px;
+    text-align:center;
+    padding:4px 10px;
+}
+
+.budget-table-wrapper{
+    overflow:auto;
+    max-height:70vh;
+    scrollbar-width:none;          
+    -ms-overflow-style:none;       
+}
+
+.budget-table-wrapper::-webkit-scrollbar{
+    display:none;                  
+}
+
+.budget-table{
+    min-width:1850px;
+}
+
+.budget-table th,
+.budget-table td{
+    white-space:nowrap;
+    vertical-align:middle;
+    padding:8px 8px; 
+    font-size:13px;
+}
+
+/* FIX: Keeps table header fixed vertically across ALL device breakpoints */
+.budget-table thead th{
+    position:sticky;
+    top:0;
+    z-index:25 !important;
+    background:#f8f9fa !important;
+    border-bottom:1px solid #dee2e6;
+}
+
+/* ========================================================================= */
+/* MULTI-DEVICE STICKY MANAGEMENT                                            */
+/* ========================================================================= */
+
+/* Base settings for all viewport sizes (Locks vertical movement instantly) */
+.sticky-checkbox,
+.sticky-id,
+.sticky-bu,
+.sticky-sbu,
+.sticky-site,
+.sticky-fy {
+    position: sticky;
+    background: #fff !important;
+}
+
+/* Desktop horizontal freeze configurations (1200px and up) */
+@media (min-width: 1200px) {
+    .sticky-checkbox {
+        left: 0;
+        z-index: 10 !important;
+        width: 38px;
+        min-width: 38px;
+        max-width: 38px;
+        text-align: center;
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+    }
+
+    .sticky-id {
+        left: 38px;
+        z-index: 10 !important;
+        width: 55px;
+        min-width: 55px;
+        max-width: 55px;
+    }
+
+    .sticky-bu {
+        left: 93px;
+        z-index: 10 !important;
+        width: 90px;
+        min-width: 90px;
+        max-width: 90px;
+    }
+
+    .sticky-sbu {
+        left: 183px;
+        z-index: 10 !important;
+        width: 90px;
+        min-width: 90px;
+        max-width: 90px;
+    }
+
+    .sticky-site {
+        left: 273px;
+        z-index: 10 !important;
+        width: 110px;
+        min-width: 110px;
+        max-width: 110px;
+    }
+
+    .sticky-fy {
+        left: 383px;
+        z-index: 10 !important;
+        width: 120px;
+        min-width: 120px;
+        max-width: 120px;
+    }
+    
+    .budget-table thead .sticky-checkbox,
+    .budget-table thead .sticky-id,
+    .budget-table thead .sticky-bu,
+    .budget-table thead .sticky-sbu,
+    .budget-table thead .sticky-site,
+    .budget-table thead .sticky-fy {
+        z-index: 30 !important;
+    }
+}
+
+/* Mobile & Tablet fluid side-swiping adaptation (Clears horizontal lock, retains vertical lock) */
+@media (max-width: 1199.98px) {
+    .sticky-checkbox, .sticky-id, .sticky-bu, .sticky-sbu, .sticky-site, .sticky-fy {
+        left: auto !important;
+    }
+}
+
+/* Always Sticky Action Column on ALL Devices */
+.sticky-action {
+    position: sticky;
+    right: 0;
+    z-index: 12 !important;
+    background: #fff !important;
+    width: 70px;
+    min-width: 70px;
+    max-width: 70px;
+    text-align: center;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+    box-shadow: -3px 0 6px -2px rgba(0,0,0,0.12);
+}
+
+.budget-table thead .sticky-action {
+    z-index: 30 !important;
+}
+
+.month-col{
+    min-width:85px;
+    text-align:right;
+}
+
+.action-btn{
+    padding:3px 6px;
+    font-size:12px;
+}
+
+.budget-table tbody tr:hover td{
+    background:#fafcff;
+}
+
+.budget-table input[type="checkbox"]{
+    margin:0;
+    cursor:pointer;
+}
+
+@media (max-width: 576px) {
+    .pagination .page-link {
+        min-width: 28px;
+        padding: 4px 6px;
+        font-size: 11px;
+    }
+}
+</style>
+
+<script>
+(function () {
+
+    const API_URL = window.APP_CONFIG.apiUrl('budget/');
+    let currentPage = 0;
+
+    function loadRecords(pageNumber) {
+        currentPage = pageNumber;
+        const pageSize = parseInt(document.getElementById('rowLimit').value);
+        const bu = document.getElementById('buFilter').value.trim();
+        const site = document.getElementById('siteFilter').value.trim();
+        const financialYear = document.getElementById('financialYearFilter').value.trim();
+        const tableBody = document.getElementById('budgetTableBody');
+
+        tableBody.style.opacity = "0.6";
+        tableBody.style.transition = "opacity 0.2s ease";
+ 
+        fetch(
+            API_URL +
+            'list?page=' + pageNumber +
+            '&size=' + pageSize +
+            '&bu=' + encodeURIComponent(bu) +
+            '&site=' + encodeURIComponent(site) +
+            '&financialYear=' + encodeURIComponent(financialYear)
+        )
+        .then(response => response.json())
+        .then(res => {
+            const displayData = res.data?.content || [];
+            const totalElements = res.data?.totalElements ?? res.data?.total ?? 0;
+            const totalPages = res.data?.totalPages ?? 0;
+
+            if (!displayData.length) {
+                tableBody.innerHTML = '<tr><td colspan="20" class="text-center py-5 text-muted">No data available</td></tr>';
+                document.getElementById('recordCountInfo').textContent = 'Showing 0 to 0 of 0 entries';
+                document.getElementById('paginationNav').innerHTML = '';
+                return;
+            }
+
+            const startLabel = (pageNumber * pageSize) + 1;
+            const endLabel = (pageNumber * pageSize) + displayData.length;
+
+            document.getElementById('recordCountInfo').textContent =
+                'Showing ' + startLabel + ' to ' + endLabel + ' of ' + totalElements + ' entries';
+
+            let html = '';
+            
+            displayData.forEach((item, index) => {
+                const serialNumber = (pageNumber * pageSize) + index + 1;
+                const itemJson = JSON.stringify(item).replace(/"/g, '&quot;');
+
+                html += `
+                <tr>
+                <td class="sticky-checkbox"><input type="checkbox" class="rowCheckbox" value="${item.id}"></td>
+                <td class="sticky-id">${serialNumber}</td>
+                <td class="sticky-bu">${item.bu || '-'}</td>
+                <td class="sticky-sbu">${item.sbu || '-'}</td>
+                <td class="sticky-site">${item.site || '-'}</td>
+                <td class="sticky-fy">${item.financialYear || '-'}</td>
+                <td class="month-col">${item.apr ?? 0}</td>
+                <td class="month-col">${item.may ?? 0}</td>
+                <td class="month-col">${item.jun ?? 0}</td>
+                <td class="month-col">${item.jul ?? 0}</td>
+                <td class="month-col">${item.aug ?? 0}</td>
+                <td class="month-col">${item.sep ?? 0}</td>
+                <td class="month-col">${item.oct ?? 0}</td>
+                <td class="month-col">${item.nov ?? 0}</td>
+                <td class="month-col">${item.dec ?? 0}</td>
+                <td class="month-col">${item.jan ?? 0}</td>
+                <td class="month-col">${item.feb ?? 0}</td>
+                <td class="month-col">${item.mar ?? 0}</td>
+                <td><strong>${item.total ?? 0}</strong></td>
+                <td class="sticky-action">
+                    <button class="btn btn-sm btn-outline-primary action-btn" onclick='openEditModal(${itemJson})'>
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+                </td>
+                </tr>`;
+            });
+
+            tableBody.innerHTML = html;
+            tableBody.style.opacity = "1";
+            renderPagination(totalPages, pageNumber);
+        })
+        .catch(() => {
+        	tableBody.style.opacity = "1";
+            tableBody.innerHTML = '<tr><td colspan="20" class="text-center text-danger py-5">Error loading data</td></tr>';
+        });
+    }
+
+    window.loadRecords = loadRecords;
+
+    function renderPagination(totalPages, currentPage) {
+        let html = '';
+        html += `
+            <li class="page-item ${currentPage === 0 ? 'disabled' : ''}">
+                <a class="page-link" href="javascript:void(0)" onclick="loadRecords(${currentPage - 1})">Previous</a>
+            </li>
+        `;
+
+        const visiblePages = 3;
+        html += `
+            <li class="page-item ${currentPage === 0 ? 'active' : ''}">
+                <a class="page-link" href="javascript:void(0)" onclick="loadRecords(0)">1</a>
+                </li>
+        `;
+
+        if (currentPage > visiblePages) {
+            html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        }
+
+        let startPage = Math.max(1, currentPage - 1);
+        let endPage = Math.min(totalPages - 2, currentPage + 1);
+
+        for (let i = startPage; i <= endPage; i++) {
+            html += `
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="javascript:void(0)" onclick="loadRecords(${i})">${i + 1}</a>
+                </li>
+            `;
+        }
+
+        if (currentPage < totalPages - visiblePages - 1) {
+            html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        }
+
+        if (totalPages > 1) {
+            html += `
+                <li class="page-item ${currentPage === totalPages - 1 ? 'active' : ''}">
+                    <a class="page-link" href="javascript:void(0)" onclick="loadRecords(${totalPages - 1})">${totalPages}</a>
+                </li>
+            `;
+        }
+
+        html += `
+            <li class="page-item ${currentPage >= totalPages - 1 ? 'disabled' : ''}">
+                <a class="page-link" href="javascript:void(0)" onclick="loadRecords(${currentPage + 1})">Next</a>
+            </li>
+        `;
+
+        document.getElementById('paginationNav').innerHTML = html;
+    }
+
+    window.openEditModal = function (item) {
+        document.getElementById('editId').value = item.id;
+        document.getElementById('editBu').value = item.bu;
+        document.getElementById('editSbu').value = item.sbu;
+        document.getElementById('editSite').value = item.site;
+        document.getElementById('editFinancialYear').value = item.financialYear;
+        document.getElementById('editApr').value = item.apr;
+        document.getElementById('editMay').value = item.may;
+        document.getElementById('editJun').value = item.jun;
+        document.getElementById('editJul').value = item.jul;
+        document.getElementById('editAug').value = item.aug;
+        document.getElementById('editSep').value = item.sep;
+        document.getElementById('editOct').value = item.oct;
+        document.getElementById('editNov').value = item.nov;
+        document.getElementById('editDec').value = item.dec;
+        document.getElementById('editJan').value = item.jan;
+        document.getElementById('editFeb').value = item.feb;
+        document.getElementById('editMar').value = item.mar;
+
+        new bootstrap.Modal(document.getElementById('editModal')).show();
+    };
+
+    document.getElementById('editBudgetForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const id = document.getElementById('editId').value;
+        const payload = {
+            bu: document.getElementById('editBu').value,
+            sbu: document.getElementById('editSbu').value,
+            site: document.getElementById('editSite').value,
+            financialYear: document.getElementById('editFinancialYear').value,
+            apr: document.getElementById('editApr').value,
+            may: document.getElementById('editMay').value,
+            jun: document.getElementById('editJun').value,
+            jul: document.getElementById('editJul').value,
+            aug: document.getElementById('editAug').value,
+            sep: document.getElementById('editSep').value,
+            oct: document.getElementById('editOct').value,
+            nov: document.getElementById('editNov').value,
+            dec: document.getElementById('editDec').value,
+            jan: document.getElementById('editJan').value,
+            feb: document.getElementById('editFeb').value,
+            mar: document.getElementById('editMar').value
+        };
+
+        fetch(API_URL + 'update/' + id, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => {
+            if (!res.ok) throw new Error();
+            alert('Budget updated successfully');
+            bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+            loadRecords(currentPage);
+        })
+        .catch(() => {
+            alert('Failed to update');
+        });
+    });
+
+    window.deleteSelectedRecords = function () {
+        const selectedIds = [];
+        document.querySelectorAll('.rowCheckbox:checked').forEach(cb => {
+            selectedIds.push(Number(cb.value));
+        });
+
+        if (selectedIds.length === 0) {
+            alert('Please select records');
+            return;
+        }
+        if (!confirm('Delete selected records?')) {
+            return;
+        }
+
+        fetch(API_URL + 'delete', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: selectedIds })
+        })
+        .then(async res => {
+            let responseText = await res.text();
+            let data = {};
+            if (responseText) {
+                data = JSON.parse(responseText);
+            }
+            if (!res.ok) {
+                throw new Error(data.error || data.message || 'Delete failed');
+            }
+            alert(data.message || 'Records deleted successfully');
+            loadRecords(currentPage);
+        })
+        .catch(err => {
+            console.error(err);
+            alert(err.message || 'Failed to delete');
+        });
+    }; 
+ 
+    document.addEventListener('change', function (e) {
+        if (e.target.id === 'selectAll') {
+            document.querySelectorAll('.rowCheckbox').forEach(cb => {
+                cb.checked = e.target.checked;
+            });
+        }
+    });
+
+    document.getElementById('buFilter').addEventListener('input', () => loadRecords(0));
+    document.getElementById('siteFilter').addEventListener('input', () => loadRecords(0));
+    document.getElementById('financialYearFilter').addEventListener('input', () => loadRecords(0));
+    document.getElementById('rowLimit').addEventListener('change', () => loadRecords(0));
+    
+    window.exportBudgetExcel = function () {
+         const bu = document.getElementById('buFilter').value.trim();
+         const site = document.getElementById('siteFilter').value.trim();
+         const financialYear = document.getElementById('financialYearFilter').value.trim();
+
+         let exportUrl = API_URL + 'export?bu=' + encodeURIComponent(bu) +
+             '&site=' + encodeURIComponent(site) +
+             '&financialYear=' + encodeURIComponent(financialYear);
+
+         window.location.href = exportUrl;
+    };
+
+    loadRecords(0);
+})();
+</script>
+
+</th:block>
+
+</body>
+</html>

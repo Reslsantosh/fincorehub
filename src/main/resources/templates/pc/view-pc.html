@@ -1,0 +1,673 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}">
+
+<head>
+    <title>PC Records</title>
+</head>
+
+<body>
+
+<div layout:fragment="content">
+
+    <div class="top-nav">
+        <span class="text-muted fw-medium">PC Master / Records</span>
+    </div>
+
+    <div class="container-fluid px-2 mt-4">
+
+        <div class="card shadow-sm border-0 table-card w-100">
+
+            <div class="card-header bg-white py-3 px-3">
+
+                <div class="row align-items-center g-3 mb-3">
+
+                    <div class="col-xl-4 col-lg-3 col-md-12 d-flex align-items-center gap-2">
+                        <a th:href="@{/}" class="btn btn-outline-secondary btn-sm text-nowrap">
+                            <i class="bi bi-arrow-left"></i> Back
+                        </a>
+                        <h5 class="mb-0 text-primary fw-bold text-nowrap">
+                           PC Records
+                        </h5>
+                    </div>
+
+                    <div class="col-xl-8 col-lg-9 col-md-12 d-flex flex-wrap justify-content-start justify-content-md-end align-items-center gap-2">
+
+                        <input type="text"
+                               id="pcCodeFilter"
+                               class="form-control form-control-sm flex-grow-1 flex-sm-grow-0"
+                               placeholder="Search PC Code"
+                               style="width: 140px; min-width: 120px;">
+
+                        <input type="text"
+                               id="buFilter"
+                               class="form-control form-control-sm flex-grow-1 flex-sm-grow-0"
+                               placeholder="Search BU"
+                               style="width: 140px; min-width: 120px;">
+
+                        <div class="d-flex align-items-center gap-1 ms-auto ms-md-0">
+                            <span class="small text-muted text-nowrap">Show</span>
+                            <select id="rowLimit" class="form-select form-select-sm" style="width: 65px;">
+                                <option value="10" selected>10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="d-flex justify-content-start justify-content-sm-end align-items-center gap-2 flex-wrap">
+
+                    <button class="btn btn-danger btn-sm flex-grow-1 flex-sm-grow-0" onclick="deleteSelectedRecords()">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+
+                    <button id="exportBtn" class="btn btn-success btn-sm flex-grow-1 flex-sm-grow-0">
+                        <i class="bi bi-download"></i> Export
+                    </button>
+                    
+                    <button class="btn btn-primary btn-sm flex-grow-1 flex-sm-grow-0" data-bs-toggle="modal" data-bs-target="#bulkUpdateModal">
+                        Bulk Update
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div class="card-body p-0">
+
+                <div class="table-responsive pc-table-wrapper">
+
+                    <table class="table table-hover align-middle mb-0 pc-table">
+
+                        <thead class="table-light">
+
+                        <tr>
+                            <th class="sticky-checkbox">
+                               <input type="checkbox" id="selectAll">
+                            </th>
+
+                            <th class="sticky-id">S.No</th>
+
+                            <th class="sticky-pc">PC Code</th>
+                            <th>PC Name</th>
+                            <th>Site (MIS)</th>
+                            <th>Unit</th>
+                            <th>SBU Final</th>
+                            <th>SBU</th>
+                            <th>BU</th>
+                            <th>Plant Code</th>
+
+                            <th class="sticky-action">
+                                Action
+                            </th>
+                        </tr>
+
+                        </thead>
+
+                        <tbody id="pcTableBody"></tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+            <div class="pagination-footer flex-column flex-sm-row gap-3 text-center text-sm-start">
+
+                <div class="text-muted small" id="recordCountInfo">
+                    Showing 0 to 0 of 0 entries
+                </div>
+
+                <nav>
+                    <ul class="pagination pagination-sm mb-0 flex-wrap justify-content-center" id="paginationNav"></ul>
+                </nav>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<th:block layout:fragment="modal">
+
+    <div class="modal fade" id="editModal" tabindex="-1">
+
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+
+            <div class="modal-content border-0 shadow">
+
+                <div class="modal-header bg-white border-bottom">
+
+                    <h5 class="modal-title fw-bold text-primary">
+                        <i class="bi bi-pencil-square me-2"></i>
+                        Edit PC Record
+                    </h5>
+
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+                </div>
+
+                <form id="editPcForm">
+
+                    <div class="modal-body p-3 p-md-4">
+
+                        <input type="hidden" id="editPcId">
+
+                        <div class="row g-2 g-md-3">
+
+                            <div class="col-6 col-md-3">
+                                <label class="form-label fw-bold small">Profit Centre</label>
+                                <input type="text" id="editProfitCentre" class="form-control form-control-sm bg-light text-muted" readonly>
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <label class="form-label fw-bold small">Profit Centre Name</label>
+                                <input type="text" id="editProfitCentreName" class="form-control form-control-sm" required>
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <label class="form-label fw-bold small">Site Name for MIS</label>
+                                <input type="text" id="editSiteNameForMIS" class="form-control form-control-sm" required>
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <label class="form-label fw-bold small">SBU Final</label>
+                                <input type="text" id="editSbuFinal" class="form-control form-control-sm" required>
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <label class="form-label fw-bold small">Unit</label>
+                                <input type="text" id="editUnit" class="form-control form-control-sm" required>
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <label class="form-label fw-bold small">SBU</label>
+                                <input type="text" id="editSbu" class="form-control form-control-sm" required>
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <label class="form-label fw-bold small">BU</label>
+                                <input type="text" id="editBu" class="form-control form-control-sm" required>
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <label class="form-label fw-bold small">Plant Code</label>
+                                <input type="text" id="editPlantCode" class="form-control form-control-sm" required>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Update Changes</button>
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="modal fade" id="bulkUpdateModal" tabindex="-1">
+
+        <div class="modal-dialog modal-dialog-centered">
+
+            <div class="modal-content border-0 shadow">
+
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-primary">Bulk Update SBU & BU</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <form id="bulkUpdateForm">
+
+                    <div class="modal-body p-3">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">SBU</label>
+                            <input type="text" id="bulkSbu" class="form-control form-control-sm" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">BU</label>
+                            <input type="text" id="bulkBu" class="form-control form-control-sm" required>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Update Selected</button>
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</th:block>
+
+
+<th:block layout:fragment="scripts">
+ 
+<style>
+.pagination-footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 15px;
+    background:#fff;
+    border-top:1px solid #dee2e6;
+}
+
+.table-card{
+    border-radius:10px;
+    overflow:hidden;
+}
+
+.pagination .page-link{
+    min-width:34px;
+    text-align:center;
+    padding:4px 10px;
+}
+
+ .pc-table-wrapper{
+    overflow:auto;
+    max-height:70vh;
+    scrollbar-width:none;       
+    -ms-overflow-style:none;    
+}
+
+.pc-table-wrapper::-webkit-scrollbar{
+    display:none;               
+}
+
+.pc-table{
+    min-width:1400px;
+}
+
+.pc-table th,
+.pc-table td{
+    white-space:nowrap;
+    vertical-align:middle;
+    padding:8px 8px;
+    font-size:13px;
+}
+
+/* FIX: Keeps the table header pinned at the top vertically across ALL devices */
+.pc-table thead th{
+    position: sticky;
+    top: 0;
+    z-index: 25 !important;
+    background: #f8f9fa !important;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* ========================================================================= */
+/* MULTI-DEVICE STICKY MANAGEMENT                                            */
+/* ========================================================================= */
+
+/* Step 1: Base settings for all sizes (Ensures columns pin vertically) */
+.sticky-checkbox,
+.sticky-id,
+.sticky-pc {
+    position: sticky;
+    background: #fff !important;
+}
+
+/* Step 2: Desktop layout horizontal freezing (1200px and up) */
+@media (min-width: 1200px) {
+    .sticky-checkbox {
+        left: 0;
+        z-index: 10 !important;
+        width: 38px;
+        min-width: 38px;
+        max-width: 38px;
+        text-align: center;
+    }
+
+    .sticky-id {
+        left: 38px;
+        z-index: 10 !important;
+        width: 55px;
+        min-width: 55px;
+        max-width: 55px;
+    }
+
+    .sticky-pc {
+        left: 93px;
+        z-index: 10 !important;
+        width: 100px;
+        min-width: 100px;
+        max-width: 100px;
+    }
+
+    .pc-table thead .sticky-checkbox,
+    .pc-table thead .sticky-id,
+    .pc-table thead .sticky-pc {
+        z-index: 30 !important;
+    }
+}
+
+/* Step 3: Mobile/Tablet layout adjustment (Clears horizontal lock to allow clean swiping, keeps vertical lock) */
+@media (max-width: 1199.98px) {
+    .sticky-checkbox, .sticky-id, .sticky-pc {
+        left: auto !important;
+    }
+}
+
+/* Always Sticky Action Column across devices */
+.sticky-action {
+    position: sticky;
+    right: 0;
+    z-index: 12 !important;
+    background: #fff !important;
+    width: 85px;
+    min-width: 85px;
+    max-width: 85px;
+    text-align: center;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+    box-shadow: -3px 0 6px -2px rgba(0,0,0,0.12);
+}
+
+.pc-table thead .sticky-action {
+    z-index: 30 !important;
+}
+
+.pc-table tbody tr:hover td{
+    background:#fafcff;
+}
+
+#pcTableBody{
+    transition:opacity 0.2s ease;
+}
+
+@media (max-width: 576px) {
+    .pagination .page-link {
+        min-width: 28px;
+        padding: 4px 6px;
+        font-size: 11px;
+    }
+}
+</style>
+
+<script>
+(function () {
+
+    const API_URL = window.APP_CONFIG.apiUrl('pc/');
+    let currentPage = 0;
+
+    function loadRecords(pageNumber) {
+        currentPage = pageNumber;
+        const pageSize = parseInt(document.getElementById('rowLimit').value);
+        const tableBody = document.getElementById('pcTableBody');
+        const pcCode = document.getElementById('pcCodeFilter').value.trim();
+        const bu = document.getElementById('buFilter').value.trim();
+        
+        tableBody.style.opacity = '0.6';
+
+        fetch(
+            API_URL +
+            'list?page=' + pageNumber +
+            '&size=' + pageSize +
+            '&pcCode=' + encodeURIComponent(pcCode) +
+            '&bu=' + encodeURIComponent(bu)
+        )
+        .then(response => response.json())
+        .then(res => {
+            let displayData = res.data?.content || [];
+            const totalElements = res.data?.totalElements || 0;
+            const totalPages = res.data?.totalPages || 0;
+
+            if (!displayData.length) {
+                tableBody.innerHTML = '<tr><td colspan="11" class="text-center py-5 text-muted">No data available</td></tr>';
+                document.getElementById('recordCountInfo').textContent = 'Showing 0 to 0 of 0 entries';
+                document.getElementById('paginationNav').innerHTML = '';
+                return;
+            }
+
+            const startLabel = (pageNumber * pageSize) + 1;
+            const endLabel = (pageNumber * pageSize) + displayData.length;
+
+            document.getElementById('recordCountInfo').textContent =
+                'Showing ' + startLabel + ' to ' + endLabel + ' of ' + totalElements + ' entries';
+
+            let html = '';
+
+            displayData.forEach((item, index) => {
+                const itemJson = JSON.stringify(item).replace(/"/g, '&quot;');
+
+                html += `<tr>
+                	<td class="sticky-checkbox"><input type="checkbox" class="rowCheckbox" value="${item.id}"></td>
+                	<td class="sticky-id">${(pageNumber * pageSize) + index + 1}</td>
+                	<td class="sticky-pc">${item.profitCentre || '-'}</td>
+                	<td>${item.profitCentreName || '-'}</td>
+                	<td>${item.siteNameForMIS || '-'}</td>
+                	<td>${item.unit || '-'}</td>
+                	<td>${item.sbuFinal || '-'}</td>
+                	<td>${item.sbu || '-'}</td>
+                	<td>${item.bu || '-'}</td>
+                	<td>${item.plantCode || '-'}</td>
+                	<td class="sticky-action">
+                    	<button class="btn btn-sm btn-outline-primary px-2 py-0 small" onclick='openEditModal(${itemJson})'>
+                    	    <i class="bi bi-pencil-square"></i> Edit
+                    	</button>
+                	</td>
+                </tr>`;
+            });
+
+            tableBody.innerHTML = html;
+            tableBody.style.opacity = '1';
+            renderPagination(totalPages, pageNumber);
+        })
+        .catch(() => {
+        	tableBody.style.opacity = '1';
+            tableBody.innerHTML = '<tr><td colspan="11" class="text-center py-5 text-danger">Error loading data</td></tr>';
+        });
+    }
+
+    window.loadRecords = loadRecords;
+
+    function renderPagination(total, active) {
+        let html = '';
+        html += `
+            <li class="page-item ${active === 0 ? 'disabled' : ''}">
+                <a class="page-link" href="javascript:void(0)" onclick="loadRecords(${active - 1})">Previous</a>
+            </li>
+        `;
+
+        const range = 2;
+        if (active > range) {
+            html += `
+                <li class="page-item">
+                    <a class="page-link" href="javascript:void(0)" onclick="loadRecords(0)">1</a>
+                </li>
+            `;
+            if (active > range + 1) {
+                html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+        }
+
+        for (let i = Math.max(0, active - range); i <= Math.min(total - 1, active + range); i++) {
+            html += `
+                <li class="page-item ${i === active ? 'active' : ''}">
+                    <a class="page-link" href="javascript:void(0)" onclick="loadRecords(${i})">${i + 1}</a>
+                </li>
+            `;
+        }
+
+        if (active < total - range - 1) {
+            if (active < total - range - 2) {
+                html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+            html += `
+                <li class="page-item">
+                    <a class="page-link" href="javascript:void(0)" onclick="loadRecords(${total - 1})">${total}</a>
+                </li>
+            `;
+        }
+
+        html += `
+            <li class="page-item ${active >= total - 1 || total === 0 ? 'disabled' : ''}">
+                <a class="page-link" href="javascript:void(0)" onclick="loadRecords(${active + 1})">Next</a>
+            </li>
+        `;
+
+        document.getElementById('paginationNav').innerHTML = html;
+    }
+
+    window.openEditModal = function (item) {
+        document.getElementById('editPcId').value = item.id;
+        document.getElementById('editProfitCentre').value = item.profitCentre;
+        document.getElementById('editProfitCentreName').value = item.profitCentreName;
+        document.getElementById('editSiteNameForMIS').value = item.siteNameForMIS;
+        document.getElementById('editSbuFinal').value = item.sbuFinal;
+        document.getElementById('editUnit').value = item.unit;
+        document.getElementById('editSbu').value = item.sbu;
+        document.getElementById('editBu').value = item.bu;
+        document.getElementById('editPlantCode').value = item.plantCode;
+
+        new bootstrap.Modal(document.getElementById('editModal')).show();
+    };
+
+    document.getElementById('pcCodeFilter').addEventListener('input', () => loadRecords(0));
+    document.getElementById('buFilter').addEventListener('input', () => loadRecords(0));
+    document.getElementById('rowLimit').addEventListener('change', () => loadRecords(0));
+
+    document.getElementById('editPcForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const pcId = document.getElementById('editPcId').value;
+        const updatedData = {
+            profitCentre: document.getElementById('editProfitCentre').value,
+            profitCentreName: document.getElementById('editProfitCentreName').value,
+            siteNameForMIS: document.getElementById('editSiteNameForMIS').value,
+            sbuFinal: document.getElementById('editSbuFinal').value,
+            unit: document.getElementById('editUnit').value,
+            sbu: document.getElementById('editSbu').value,
+            bu: document.getElementById('editBu').value,
+            plantCode: document.getElementById('editPlantCode').value
+        };
+
+        fetch(API_URL + 'update/' + pcId, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedData)
+        })
+        .then(res => {
+            if (!res.ok) throw new Error();
+            alert('PC Record updated successfully!');
+            bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+            loadRecords(currentPage);
+        })
+        .catch(() => {
+            alert('Failed to update record');
+        });
+    });
+
+    document.addEventListener('change', function (e) {
+        if (e.target.id === 'selectAll') {
+            document.querySelectorAll('.rowCheckbox').forEach(cb => {
+                cb.checked = e.target.checked;
+            });
+        }
+    });
+
+    document.getElementById('bulkUpdateForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const selectedIds = [];
+        document.querySelectorAll('.rowCheckbox:checked').forEach(cb => {
+            selectedIds.push(Number(cb.value));
+        });
+
+        if (selectedIds.length === 0) {
+            alert('Please select records');
+            return;
+        }
+
+        const payload = {
+            ids: selectedIds,
+            sbu: document.getElementById('bulkSbu').value,
+            bu: document.getElementById('bulkBu').value
+        };
+
+        fetch(API_URL + 'bulk-update', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => {
+            if (!res.ok) throw new Error();
+            alert('Records updated successfully');
+            bootstrap.Modal.getInstance(document.getElementById('bulkUpdateModal')).hide();
+            loadRecords(currentPage);
+        })
+        .catch(() => {
+            alert('Failed to update records');
+        });
+    });
+    
+    document.getElementById('exportBtn').addEventListener('click', function () {
+         const pcCode = document.getElementById('pcCodeFilter').value.trim();
+         const bu = document.getElementById('buFilter').value.trim();
+         window.location.href = API_URL + 'export?pcCode=' + encodeURIComponent(pcCode) + '&bu=' + encodeURIComponent(bu);
+     });
+    
+    window.deleteSelectedRecords = function () {
+        const selectedIds = [];
+        document.querySelectorAll('.rowCheckbox:checked').forEach(cb => {
+            selectedIds.push(Number(cb.value));
+        });
+
+        if (selectedIds.length === 0) {
+            alert('Please select records');
+            return;
+        }
+        if (!confirm('Delete selected records?')) {
+            return;
+        }
+
+        fetch(API_URL + 'delete', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: selectedIds })
+        })
+        .then(async res => {
+            let responseText = await res.text();
+            let data = {};
+            if (responseText) data = JSON.parse(responseText);
+
+            if (!res.ok) {
+                throw new Error(data.error || data.message || 'Delete failed');
+            }
+            alert(data.message || 'Records deleted successfully');
+            loadRecords(currentPage);
+        })
+        .catch(err => {
+            console.error(err);
+            alert(err.message || 'Failed to delete');
+        });
+    };
+
+    loadRecords(0);
+})();
+</script>
+
+</th:block>
+
+</body>
+</html>

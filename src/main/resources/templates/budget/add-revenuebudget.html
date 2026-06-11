@@ -1,0 +1,288 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}">
+
+<head>
+    <title>Revenue Budget Bulk Upload</title>
+
+<style>
+    .upload-card {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .upload-box {
+        border: 1.5px dashed #d6dce3;
+        border-radius: 10px;
+        background: #f8fafc;
+        padding: 18px 15px;
+        transition: 0.3s;
+    }
+
+    .upload-box:hover {
+        border-color: #0d6efd;
+        background: #f5f9ff;
+    }
+
+    .upload-icon {
+        font-size: 2rem;
+        color: #0d6efd;
+    }
+
+    .note-box {
+        background: #fff8e1;
+        border-left: 4px solid #ffc107;
+        border-radius: 6px;
+        padding: 8px 10px;
+        font-size: 11px;
+        line-height: 1.4;
+    }
+
+    .column-order {
+        font-size: 10px;
+        line-height: 1.8;
+        color: #495057;
+        background: #ffffff;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 8px;
+        
+        /* CHANGED: Allowed inline horizontal swiping layout adjustment for mobile viewports */
+        white-space: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Hide scrollbar track elements while maintaining touch scrolling functionality */
+    .column-order::-webkit-scrollbar {
+        display: none;
+    }
+    .column-order {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .card-body {
+        padding: 12px !important;
+    }
+
+    .top-nav {
+        margin-bottom: 8px;
+    }
+
+    .alert {
+        padding: 6px 10px;
+        font-size: 12px;
+        margin-bottom: 8px;
+    }
+
+    ul {
+        margin-bottom: 4px;
+    }
+</style>
+</head>
+
+<body>
+
+<div layout:fragment="content">
+
+    <div class="top-nav">
+        <span class="text-muted fw-medium">
+           Revenue Budgets / Bulk Upload
+        </span>
+    </div>
+
+    <div class="container-fluid mt-3 px-2">
+
+        <div class="card shadow-sm border-0 upload-card w-100">
+
+            <div class="card-header bg-white py-2">
+                <h6 class="mb-0 text-primary fw-bold">
+                    <i class="bi bi-file-earmark-excel-fill me-2"></i>
+                    Revenue Budget Excel Upload
+                </h6>
+            </div>
+
+            <div class="card-body p-3">
+
+                <form id="uploadForm" enctype="multipart/form-data">
+
+                    <div class="upload-box text-center">
+
+                        <div class="mb-2">
+                            <i class="bi bi-cloud-arrow-up-fill upload-icon"></i>
+                        </div>
+
+                        <h6 class="fw-bold mb-1">
+                            Upload Revenue Budget File
+                        </h6>
+
+                        <p class="text-muted small mb-3">
+                            Supported formats: .xlsx, .xls
+                        </p>
+
+                        <div class="row justify-content-center">
+                            <div class="col-11 col-sm-8 col-md-4">
+                                <input type="file"
+                                       class="form-control form-control-sm"
+                                       id="excelFile"
+                                       accept=".xlsx,.xls"
+                                       required>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <button type="submit"
+                                    class="btn btn-primary btn-sm px-4"
+                                    id="uploadBtn">
+                                <i class="bi bi-upload me-1"></i>
+                                Upload
+                            </button>
+                        </div>
+
+                    </div>
+
+                </form>
+
+                <div id="responseContainer" class="mt-3"></div>
+
+                <div class="note-box mt-3">
+
+                    <div class="fw-bold mb-2">
+                        <i class="bi bi-info-circle-fill me-1"></i>
+                        Instructions
+                    </div>
+
+                    <ul class="mb-2 ps-3">
+                        <li>Maximum 1000 rows allowed</li>
+                        <li>Do not change Excel column order</li>
+                        <li>Empty month values will be treated as 0</li>
+                    </ul>
+
+                    <div class="fw-semibold mb-1 text-dark">
+                        Column Order:
+                    </div>
+
+                    <div class="column-order">
+                        <span class="badge bg-primary">A</span> BU
+                        <span class="text-muted mx-1">|</span>
+                        <span class="badge bg-primary">B</span> SBU
+                        <span class="text-muted mx-1">|</span>
+                        <span class="badge bg-primary">C</span> Site
+                        <span class="text-muted mx-1">|</span>
+                        <span class="badge bg-primary">D</span> Financial Year
+                        <span class="text-muted mx-1">|</span>
+                        <span class="badge bg-success">E</span> Apr
+                        <span class="text-muted mx-1">|</span>
+                        <span class="badge bg-success">F</span> May
+                        <span class="text-muted mx-1">|</span>
+                        <span class="badge bg-success">G</span> Jun
+                        <span class="text-muted mx-1">|</span>
+                        <span class="badge bg-success">H</span> Jul
+                        <span class="text-muted mx-1">|</span>
+                        <span class="badge bg-success">I</span> Aug
+                        <span class="text-muted mx-1">|</span>
+                        <span class="badge bg-success">J</span> Sep
+                        <span class="text-muted mx-1">|</span>
+                        <span class="badge bg-success">K</span> Oct
+                        <span class="text-muted mx-1">|</span>
+                        <span class="badge bg-success">L</span> Nov
+                        <span class="text-muted mx-1">|</span>
+                        <span class="badge bg-success">M</span> Dec
+                        <span class="text-muted mx-1">|</span>
+                        <span class="badge bg-warning text-dark">N</span> Jan
+                        <span class="text-muted mx-1">|</span>
+                        <span class="badge bg-warning text-dark">O</span> Feb
+                        <span class="text-muted mx-1">|</span>
+                        <span class="badge bg-warning text-dark">P</span> Mar
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        (function () {
+            const API_URL = window.APP_CONFIG.apiUrl('budget/');
+
+            document.getElementById("uploadForm")
+                .addEventListener("submit", async function (e) {
+
+                    e.preventDefault();
+
+                    const fileInput = document.getElementById("excelFile");
+                    const responseContainer = document.getElementById("responseContainer");
+                    const uploadBtn = document.getElementById("uploadBtn");
+
+                    if (!fileInput.files.length) {
+                        responseContainer.innerHTML = `
+                            <div class="alert alert-danger py-2">
+                                Please select an Excel file.
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    const formData = new FormData();
+                    formData.append("file", fileInput.files[0]);
+
+                    try {
+                        uploadBtn.disabled = true;
+                        uploadBtn.innerHTML = `
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                            Uploading...
+                        `;
+
+                        responseContainer.innerHTML = `
+                            <div class="alert alert-info py-2">
+                                Processing Revenue Budget file...
+                            </div>
+                        `;
+
+                        const response = await fetch(API_URL + 'bulk-upload', {
+                            method: "POST",
+                            body: formData
+                        });
+
+                        const result = await response.json();
+
+                        if (!response.ok || result.error || (result.data === null && result.message === null)) {
+                            throw new Error(result.error || result.message || "Failed to process file");
+                        }
+
+                        responseContainer.innerHTML = `
+                            <div class="alert alert-success py-2">
+                                <strong>${result.message || 'Success'}</strong>
+                                <br>
+                                ${result.data || ''}
+                            </div>
+                        `;
+
+                        document.getElementById("uploadForm").reset();
+
+                    } catch (error) {
+                        console.error(error);
+                        responseContainer.innerHTML = `
+                            <div class="alert alert-danger py-2">
+                                ${error.message}
+                            </div>
+                        `;
+                    } finally {
+                        uploadBtn.disabled = false;
+                        uploadBtn.innerHTML = `
+                            <i class="bi bi-upload me-1"></i>
+                            Upload
+                        `;
+                    }
+                });
+        })();
+    </script>
+</div>
+
+</body>
+</html>

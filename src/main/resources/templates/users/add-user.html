@@ -1,0 +1,116 @@
+ 
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}">
+<head>
+    <title>Add User</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="top-nav ms-3"><span class="text-muted">User Management / Add User</span></div>
+        
+        <div class="container-fluid mt-3">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow-sm border-0 w-100">
+                        
+                        <div class="card-header bg-white py-3 border-0">
+                            <div class="d-flex align-items-center gap-2">
+                                <a th:href="@{/users/list}" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
+                                    <i class="bi bi-arrow-left"></i> Back
+                                </a>
+                                <h5 class="mb-0 text-primary fw-bold">Create New User</h5>
+                            </div>
+                        </div>
+                        
+                        <div class="card-body px-4 pb-4 pt-0">
+                            <form id="addUserForm" class="m-0">
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-secondary mb-1">Username <span class="text-danger">*</span></label>
+                                        <input type="text" name="username" class="form-control" 
+                                               placeholder="Enter username" required minlength="3" maxlength="50">
+                                        <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">3-50 characters</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-secondary mb-1">Full Name <span class="text-danger">*</span></label>
+                                        <input type="text" name="fullName" class="form-control" 
+                                               placeholder="Enter full name" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label text-secondary mb-1">Email <span class="text-danger">*</span></label>
+                                    <input type="email" name="email" class="form-control" 
+                                           placeholder="Enter email address" required>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-secondary mb-1">Password <span class="text-danger">*</span></label>
+                                        <input type="password" name="password" class="form-control" 
+                                               placeholder="Enter password" required minlength="6">
+                                        <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">Minimum 6 characters</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-secondary mb-1">Role <span class="text-danger">*</span></label>
+                                        <select name="role" class="form-select" required>
+                                            <option value="">Select Role</option>
+                                            <option value="DEFAULT_USER">DEFAULT_USER</option>
+                                            <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-info py-2 px-3 my-3" style="font-size: 0.9rem;">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    New users will be active by default and can login immediately.
+                                </div>
+                                
+                                <div class="d-flex gap-2 justify-content-end mt-4">
+                                    <a th:href="@{/users/list}" class="btn btn-light border px-4">Cancel</a>
+                                    <button type="submit" class="btn btn-primary px-4">
+                                        <i class="bi bi-check-lg me-2"></i>Create User
+                                    </button>
+                                </div>
+                                
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <th:block layout:fragment="scripts">
+        <script>
+            document.getElementById('addUserForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                var formData = {};
+                new FormData(this).forEach(function(value, key) { formData[key] = value; });
+                
+                fetch(window.APP_CONFIG.apiUrl('users/add'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.error) {
+                        alert('Error: ' + data.error);
+                    } else {
+                        alert('User created successfully!');
+                        window.location.href = window.APP_CONFIG.url('/users/list');
+                    }
+                })
+                .catch(function() { alert('Failed to create user'); });
+            });
+        </script>
+    </th:block>
+</body>
+</html>
